@@ -6,7 +6,7 @@ const EXCHANGE_RATE_USD_TOTAL = 89000;
 
 const translations = {
   en: {
-    title: 'Currency Calculator',
+    title: 'أرغيلتي Calculator',
     calculator: 'Calculator',
     total: 'Total',
     totalUsd: 'Total ($)',
@@ -24,7 +24,7 @@ const translations = {
     clear: 'Clear'
   },
   ar: {
-    title: 'حاسبة العملات',
+    title: 'حاسبة أرغيلتي',
     calculator: 'آلة حاسبة',
     total: 'المجموع',
     totalUsd: 'المجموع ($)',
@@ -118,11 +118,26 @@ function Calculator({ visible, onClose, onCalculateLbp, onCalculateUsd, t }: {
     setWaitingForOperand(false);
   };
 
+  const resolveDisplay = () => {
+    if (operator && currentValue !== '') {
+      const inputValue = parseFloat(display);
+      const currentVal = parseFloat(currentValue);
+      let newValue = currentVal;
+      if (operator === '+') newValue = currentVal + inputValue;
+      else if (operator === '-') newValue = currentVal - inputValue;
+      setDisplay(String(newValue));
+      setCurrentValue('');
+      setOperator('');
+      setWaitingForOperand(true);
+      return String(newValue);
+    }
+    return display;
+  };
+
   const switchTab = (newTab: 'USD' | 'LBP') => {
-    // Save current display to current tab
-    if (tab === 'USD') setUsdValue(display);
-    else setLbpValue(display);
-    // Load the other tab's value
+    const resolved = resolveDisplay();
+    if (tab === 'USD') setUsdValue(resolved);
+    else setLbpValue(resolved);
     setDisplay(newTab === 'USD' ? usdValue : lbpValue);
     setCurrentValue('');
     setOperator('');
@@ -131,11 +146,11 @@ function Calculator({ visible, onClose, onCalculateLbp, onCalculateUsd, t }: {
   };
 
   const handleSubmit = () => {
-    // Save current tab value
-    const finalUsd = tab === 'USD' ? display : usdValue;
-    const finalLbp = tab === 'LBP' ? display : lbpValue;
-    onCalculateUsd(finalUsd);
-    onCalculateLbp(finalLbp);
+    const resolved = resolveDisplay();
+    const finalUsd = tab === 'USD' ? resolved : usdValue;
+    const finalLbp = tab === 'LBP' ? resolved : lbpValue;
+    if (parseFloat(finalUsd) !== 0) onCalculateUsd(finalUsd);
+    if (parseFloat(finalLbp) !== 0) onCalculateLbp(finalLbp);
     onClose();
   };
 

@@ -200,6 +200,7 @@ h1 {
 
 .totals-row {
   display: flex;
+  flex-direction: column;
   gap: 15px;
 }
 
@@ -469,11 +470,6 @@ input[type="text"]:focus {
     right: 15px;
     padding: 6px 14px;
     font-size: 13px;
-  }
-
-  .totals-row {
-    flex-direction: column;
-    gap: 10px;
   }
 
   label {
