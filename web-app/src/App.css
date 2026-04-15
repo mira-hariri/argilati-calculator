@@ -221,6 +221,35 @@ label {
   margin-bottom: 8px;
 }
 
+.label-with-calc {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.mini-calc-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 20%;
+  background: #667eea;
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: transform 0.2s;
+  margin-top: -1px;
+}
+
+.mini-calc-btn:hover {
+  transform: scale(1.15);
+}
+
 .toggle-inline {
   padding: 8px 20px;
   border: none;

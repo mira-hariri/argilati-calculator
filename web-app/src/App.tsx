@@ -43,30 +43,35 @@ const translations = {
   }
 };
 
-function Calculator({ visible, onClose, onCalculateLbp, onCalculateUsd, t }: {
+function Calculator({ visible, onClose, onCalculateLbp, onCalculateUsd, defaultTab, initialUsd, initialLbp, t }: {
   visible: boolean;
   onClose: () => void;
   onCalculateLbp: (value: string) => void;
   onCalculateUsd: (value: string) => void;
+  defaultTab: 'USD' | 'LBP';
+  initialUsd: string;
+  initialLbp: string;
   t: typeof translations.en;
 }) {
   const [display, setDisplay] = useState('0');
   const [currentValue, setCurrentValue] = useState('');
   const [operator, setOperator] = useState('');
   const [waitingForOperand, setWaitingForOperand] = useState(false);
-  const [tab, setTab] = useState<'USD' | 'LBP'>('USD');
+  const [tab, setTab] = useState<'USD' | 'LBP'>('LBP');
   const [usdValue, setUsdValue] = useState('0');
   const [lbpValue, setLbpValue] = useState('0');
 
   useEffect(() => {
     if (visible) {
-      setDisplay('0');
+      const initUsd = initialUsd || '0';
+      const initLbp = initialLbp || '0';
+      setUsdValue(initUsd);
+      setLbpValue(initLbp);
+      setDisplay(defaultTab === 'USD' ? initUsd : initLbp);
       setCurrentValue('');
       setOperator('');
-      setWaitingForOperand(false);
-      setUsdValue('0');
-      setLbpValue('0');
-      setTab('USD');
+      setWaitingForOperand(true);
+      setTab(defaultTab);
     }
   }, [visible]);
 
@@ -205,6 +210,7 @@ function App() {
   } | null>(null);
   const [customUsd, setCustomUsd] = useState('');
   const [showCalculator, setShowCalculator] = useState(false);
+  const [calcDefaultTab, setCalcDefaultTab] = useState<'USD' | 'LBP'>('LBP');
   const [language, setLanguage] = useState<'en' | 'ar'>('en');
   const totalInputRef = useRef<HTMLInputElement>(null);
 
@@ -296,6 +302,11 @@ function App() {
     setCustomUsd('');
   };
 
+  const openCalc = (tab: 'USD' | 'LBP') => {
+    setCalcDefaultTab(tab);
+    setShowCalculator(true);
+  };
+
   return (
     <div className="container">
       <button className="language-toggle" onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}>
@@ -304,7 +315,7 @@ function App() {
 
       <h1>{t.title}</h1>
 
-      <button className="calculator-toggle" onClick={() => setShowCalculator(true)}>
+      <button className="calculator-toggle" onClick={() => openCalc('LBP')}>
         🧮 {t.calculator}
       </button>
 
@@ -313,13 +324,19 @@ function App() {
         onClose={() => setShowCalculator(false)}
         onCalculateLbp={(value) => setTotalAmount(value)}
         onCalculateUsd={(value) => setTotalUsdAmount(value)}
+        defaultTab={calcDefaultTab}
+        initialUsd={totalUsdAmount}
+        initialLbp={totalAmount}
         t={t}
       />
 
       <div className="form">
         <div className="totals-row">
           <div className="field-group">
-            <label>{t.totalUsd}</label>
+            <div className="label-with-calc">
+              <label>{t.totalUsd}</label>
+              <button className="mini-calc-btn" onClick={() => openCalc('USD')}>🧮</button>
+            </div>
             <input
               type="text"
               inputMode="numeric"
@@ -330,7 +347,10 @@ function App() {
             />
           </div>
           <div className="field-group">
-            <label>{t.totalLbp}</label>
+            <div className="label-with-calc">
+              <label>{t.totalLbp}</label>
+              <button className="mini-calc-btn" onClick={() => openCalc('LBP')}>🧮</button>
+            </div>
             <div className="input-with-suffix">
               <input
                 ref={totalInputRef}
