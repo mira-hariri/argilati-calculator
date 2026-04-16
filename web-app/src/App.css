@@ -254,7 +254,7 @@
 
 .calculator-buttons {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 6px;
 }
 
@@ -327,16 +327,12 @@
   background: #2e7d32;
   color: #fff;
   border-color: #1b5e20;
-  grid-column: span 3;
+  grid-column: span 4;
   font-size: 18px;
 }
 
 .calc-btn.go:hover {
   background: #388e3c;
-}
-
-.calc-btn.zero {
-  grid-column: span 2;
 }
 
 .calc-close-btn {
