@@ -166,6 +166,13 @@ function App() {
   };
 
   const openCalc = (tab: 'USD' | 'LBP') => {
+    // Seed history from field value if history is empty but field has a value
+    if (tab === 'USD' && usdHistory.length === 0 && totalUsdAmount && parseFloat(totalUsdAmount) !== 0) {
+      setUsdHistory([`+${totalUsdAmount}`]);
+    }
+    if (tab === 'LBP' && lbpHistory.length === 0 && totalAmount && parseFloat(totalAmount) !== 0) {
+      setLbpHistory([`+${totalAmount}`]);
+    }
     setCalcDefaultTab(tab);
     setShowCalculator(true);
   };
@@ -268,7 +275,7 @@ function App() {
         </div>
       )}
 
-      <h1>{t.title}</h1>
+      <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Logo" className="app-logo" />
 
       <button className="calculator-toggle" onClick={() => openCalc('LBP')}>🧮 {t.calculator}</button>
 
