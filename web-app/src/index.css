@@ -5,12 +5,9 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: 'Courier New', 'Consolas', 'Monaco', monospace;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #e8e8e8;
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -20,5 +17,5 @@ body {
 
 #root {
   width: 100%;
-  max-width: 500px;
+  max-width: 520px;
 }
