@@ -36,6 +36,13 @@ Then:
 - Press `a` for Android emulator
 - Scan QR code with Expo Go app on your phone
 
+### Deployment
+```bash
+cd web-app
+npm run build
+eval $(ssh-agent -s) ; ssh-add ~/.ssh/id_rsa_personal ; npx gh-pages -d dist
+```
+
 ## Features
 
 Both apps include:
