@@ -277,6 +277,16 @@
   font-family: inherit;
 }
 
+.calc-history-entry.clickable {
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.calc-history-entry.clickable:hover {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
 .calc-history-entry.minus {
   color: #c62828;
   background: #ffebee;

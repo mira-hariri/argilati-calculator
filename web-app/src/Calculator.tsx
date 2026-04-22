@@ -102,6 +102,13 @@ export default function Calculator({ visible, onClose, onSubmit, defaultTab, usd
   const otherTotal = sumHistory(tab === 'USD' ? localLbp : localUsd);
   const currentTotal = sumHistory(getHistory());
 
+  const removeHistoryEntry = (index: number) => {
+    const history = getHistory();
+    const newHistory = history.filter((_, i) => i !== index);
+    if (tab === 'USD') setLocalUsd(newHistory);
+    else setLocalLbp(newHistory);
+  };
+
   const commitEntry = (): { usd: string[]; lbp: string[] } => {
     if (!inputBuffer) return { usd: localUsd, lbp: localLbp };
     const entry = `${pendingOp}${inputBuffer}`;
@@ -165,7 +172,7 @@ export default function Calculator({ visible, onClose, onSubmit, defaultTab, usd
         <div className="calculator-display">{displayStr}</div>
         <div className="calc-history">
           {history.map((entry, i) => (
-            <span key={i} className={`calc-history-entry ${entry.startsWith('-') ? 'minus' : ''}`}>{entry}</span>
+            <span key={i} className={`calc-history-entry clickable ${entry.startsWith('-') ? 'minus' : ''}`} onClick={() => removeHistoryEntry(i)}>{entry}</span>
           ))}
           {inputBuffer && (
             <span className={`calc-history-entry ${pendingOp === '-' ? 'minus' : ''} pending`}>{pendingOp}{inputBuffer}</span>
