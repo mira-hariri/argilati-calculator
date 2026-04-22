@@ -337,12 +337,16 @@
   background: #2e7d32;
   color: #fff;
   border-color: #1b5e20;
-  grid-column: span 4;
+  grid-column: span 2;
   font-size: 18px;
 }
 
 .calc-btn.go:hover {
   background: #388e3c;
+}
+
+.calc-btn-eq {
+  grid-column: span 2;
 }
 
 .calc-close-btn {

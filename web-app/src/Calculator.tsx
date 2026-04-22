@@ -17,10 +17,11 @@ export default function Calculator({ visible, onClose, onSubmit, defaultTab, usd
   const [tab, setTab] = useState<'USD' | 'LBP'>('LBP');
   const [localUsd, setLocalUsd] = useState<string[]>([]);
   const [localLbp, setLocalLbp] = useState<string[]>([]);
+  const [multiplyBase, setMultiplyBase] = useState('');
+  const [multiplier, setMultiplier] = useState('');
 
-  // Refs to access latest state in keyboard handler
-  const stateRef = useRef({ inputBuffer, pendingOp, tab, localUsd, localLbp });
-  stateRef.current = { inputBuffer, pendingOp, tab, localUsd, localLbp };
+  const stateRef = useRef({ inputBuffer, pendingOp, tab, localUsd, localLbp, multiplyBase, multiplier });
+  stateRef.current = { inputBuffer, pendingOp, tab, localUsd, localLbp, multiplyBase, multiplier };
 
   useEffect(() => {
     if (visible) {
@@ -29,10 +30,11 @@ export default function Calculator({ visible, onClose, onSubmit, defaultTab, usd
       setTab(defaultTab);
       setInputBuffer('');
       setPendingOp('+');
+      setMultiplyBase('');
+      setMultiplier('');
     }
   }, [visible]);
 
-  // Keyboard support
   useEffect(() => {
     if (!visible) return;
 
@@ -40,13 +42,16 @@ export default function Calculator({ visible, onClose, onSubmit, defaultTab, usd
       const key = e.key;
       if (key >= '0' && key <= '9') {
         e.preventDefault();
-        setInputBuffer(prev => prev + key);
+        doNumber(key);
       } else if (key === '+') {
         e.preventDefault();
         doOperator('+');
       } else if (key === '-') {
         e.preventDefault();
         doOperator('-');
+      } else if (key === '*') {
+        e.preventDefault();
+        doMultiply();
       } else if (key === 'Enter' || key === '=') {
         e.preventDefault();
         doEquals();
@@ -55,7 +60,7 @@ export default function Calculator({ visible, onClose, onSubmit, defaultTab, usd
         onClose();
       } else if (key === 'Backspace') {
         e.preventDefault();
-        setInputBuffer(prev => prev.slice(0, -1));
+        doBackspace();
       } else if (key === 'Delete') {
         e.preventDefault();
         doClear();
@@ -66,16 +71,54 @@ export default function Calculator({ visible, onClose, onSubmit, defaultTab, usd
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [visible, onClose]);
 
-  // Helper to commit from ref state (for keyboard handler)
-  const doCommit = () => {
+  const doNumber = (num: string) => {
+    if (stateRef.current.multiplyBase) {
+      setMultiplier(prev => prev + num);
+    } else {
+      setInputBuffer(prev => prev + num);
+    }
+  };
+
+  const doBackspace = () => {
+    if (stateRef.current.multiplyBase) {
+      setMultiplier(prev => prev.slice(0, -1));
+    } else {
+      setInputBuffer(prev => prev.slice(0, -1));
+    }
+  };
+
+  const buildEntry = (): string | null => {
     const s = stateRef.current;
-    if (!s.inputBuffer) return;
-    const entry = `${s.pendingOp}${s.inputBuffer}`;
+    if (s.multiplyBase && s.multiplier) {
+      return `${s.pendingOp}${s.multiplyBase}*${s.multiplier}`;
+    } else if (s.multiplyBase) {
+      return `${s.pendingOp}${s.multiplyBase}`;
+    } else if (s.inputBuffer) {
+      return `${s.pendingOp}${s.inputBuffer}`;
+    }
+    return null;
+  };
+
+  const doCommit = () => {
+    const entry = buildEntry();
+    if (!entry) return;
+    const s = stateRef.current;
     const history = s.tab === 'USD' ? s.localUsd : s.localLbp;
     const newHistory = [...history, entry];
     if (s.tab === 'USD') setLocalUsd(newHistory);
     else setLocalLbp(newHistory);
     setInputBuffer('');
+    setMultiplyBase('');
+    setMultiplier('');
+  };
+
+  const doMultiply = () => {
+    const s = stateRef.current;
+    if (s.inputBuffer && !s.multiplyBase) {
+      setMultiplyBase(s.inputBuffer);
+      setInputBuffer('');
+      setMultiplier('');
+    }
   };
 
   const doOperator = (op: '+' | '-') => {
@@ -92,6 +135,8 @@ export default function Calculator({ visible, onClose, onSubmit, defaultTab, usd
     const s = stateRef.current;
     setInputBuffer('');
     setPendingOp('+');
+    setMultiplyBase('');
+    setMultiplier('');
     if (s.tab === 'USD') setLocalUsd([]);
     else setLocalLbp([]);
   };
@@ -110,8 +155,8 @@ export default function Calculator({ visible, onClose, onSubmit, defaultTab, usd
   };
 
   const commitEntry = (): { usd: string[]; lbp: string[] } => {
-    if (!inputBuffer) return { usd: localUsd, lbp: localLbp };
-    const entry = `${pendingOp}${inputBuffer}`;
+    const entry = buildEntry();
+    if (!entry) return { usd: localUsd, lbp: localLbp };
     const newHistory = [...getHistory(), entry];
     if (tab === 'USD') {
       setLocalUsd(newHistory);
@@ -122,25 +167,21 @@ export default function Calculator({ visible, onClose, onSubmit, defaultTab, usd
     }
   };
 
-  const handleNumber = (num: string) => {
-    setInputBuffer(prev => prev + num);
-  };
-
-  const handleOperator = (op: '+' | '-') => {
-    doOperator(op);
-  };
-
-  const handleEquals = () => {
-    doEquals();
-  };
-
-  const handleClear = () => {
-    doClear();
-  };
+  const handleNumber = (num: string) => doNumber(num);
+  const handleOperator = (op: '+' | '-') => doOperator(op);
+  const handleEquals = () => doEquals();
+  const handleClear = () => doClear();
 
   const switchTab = (newTab: 'USD' | 'LBP') => {
-    if (inputBuffer) commitEntry();
+    const entry = buildEntry();
+    if (entry) {
+      const newHistory = [...getHistory(), entry];
+      if (tab === 'USD') setLocalUsd(newHistory);
+      else setLocalLbp(newHistory);
+    }
     setInputBuffer('');
+    setMultiplyBase('');
+    setMultiplier('');
     setPendingOp('+');
     setTab(newTab);
   };
@@ -151,11 +192,27 @@ export default function Calculator({ visible, onClose, onSubmit, defaultTab, usd
     onClose();
   };
 
-  const displayStr = inputBuffer
-    ? `${currentTotal !== 0 ? currentTotal.toLocaleString() + ' ' + pendingOp + ' ' : (pendingOp === '-' ? '- ' : '')}${parseFloat(inputBuffer).toLocaleString()}`
-    : currentTotal.toLocaleString();
+  // Build display string
+  let displayStr: string;
+  if (multiplyBase) {
+    const mulVal = multiplier ? parseFloat(multiplyBase) * parseFloat(multiplier) : parseFloat(multiplyBase);
+    const prefix = currentTotal !== 0 ? currentTotal.toLocaleString() + ' ' + pendingOp + ' ' : (pendingOp === '-' ? '- ' : '');
+    displayStr = `${prefix}${parseFloat(multiplyBase).toLocaleString()} × ${multiplier || '?'} = ${mulVal.toLocaleString()}`;
+  } else if (inputBuffer) {
+    displayStr = `${currentTotal !== 0 ? currentTotal.toLocaleString() + ' ' + pendingOp + ' ' : (pendingOp === '-' ? '- ' : '')}${parseFloat(inputBuffer).toLocaleString()}`;
+  } else {
+    displayStr = currentTotal.toLocaleString();
+  }
 
   const history = getHistory();
+
+  // Pending entry display
+  let pendingDisplay = '';
+  if (multiplyBase) {
+    pendingDisplay = `${pendingOp}${multiplyBase}*${multiplier || '?'}`;
+  } else if (inputBuffer) {
+    pendingDisplay = `${pendingOp}${inputBuffer}`;
+  }
 
   return (
     <div className="calculator-overlay" onClick={onClose}>
@@ -174,15 +231,15 @@ export default function Calculator({ visible, onClose, onSubmit, defaultTab, usd
           {history.map((entry, i) => (
             <span key={i} className={`calc-history-entry clickable ${entry.startsWith('-') ? 'minus' : ''}`} onClick={() => removeHistoryEntry(i)}>{entry}</span>
           ))}
-          {inputBuffer && (
-            <span className={`calc-history-entry ${pendingOp === '-' ? 'minus' : ''} pending`}>{pendingOp}{inputBuffer}</span>
+          {pendingDisplay && (
+            <span className={`calc-history-entry ${pendingOp === '-' ? 'minus' : ''} pending`}>{pendingDisplay}</span>
           )}
         </div>
         <div className="calculator-buttons">
           <button onClick={() => handleNumber('7')} className="calc-btn">7</button>
           <button onClick={() => handleNumber('8')} className="calc-btn">8</button>
           <button onClick={() => handleNumber('9')} className="calc-btn">9</button>
-          <button onClick={() => setInputBuffer(prev => prev.slice(0, -1))} className="calc-btn clear">⌫</button>
+          <button onClick={doBackspace} className="calc-btn clear">⌫</button>
           <button onClick={() => handleNumber('4')} className="calc-btn">4</button>
           <button onClick={() => handleNumber('5')} className="calc-btn">5</button>
           <button onClick={() => handleNumber('6')} className="calc-btn">6</button>
@@ -190,11 +247,12 @@ export default function Calculator({ visible, onClose, onSubmit, defaultTab, usd
           <button onClick={() => handleNumber('1')} className="calc-btn">1</button>
           <button onClick={() => handleNumber('2')} className="calc-btn">2</button>
           <button onClick={() => handleNumber('3')} className="calc-btn">3</button>
-          <button onClick={() => handleOperator('+')} className="calc-btn operator">+</button>
+          <button onClick={doMultiply} className="calc-btn operator">×</button>
           <button onClick={handleClear} className="calc-btn clear">C</button>
           <button onClick={() => handleNumber('0')} className="calc-btn">0</button>
           <button onClick={() => handleNumber('00')} className="calc-btn">00</button>
-          <button onClick={handleEquals} className="calc-btn operator">=</button>
+          <button onClick={() => handleOperator('+')} className="calc-btn operator">+</button>
+          <button onClick={handleEquals} className="calc-btn operator calc-btn-eq">=</button>
           <button onClick={handleSubmitClick} className="calc-btn go">{t.go}</button>
         </div>
       </div>
